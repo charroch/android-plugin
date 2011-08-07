@@ -49,7 +49,6 @@ object AndroidBase {
     platformPath <<= (sdkPath, platformName) (_ / "platforms" / _),
 
     packageApkName <<= (artifact) (_.name + ".apk"),
-    manifestPath <<= (sourceDirectory, manifestName) (_ / _),
 
     manifestPackage <<= (manifestPath) {
       manifest(_).attribute("package").getOrElse(error("package not defined")).text
@@ -58,8 +57,6 @@ object AndroidBase {
     maxSdkVersion <<= (manifestPath, manifestSchema)(usesSdk(_, _, "maxSdkVersion")),
 
     nativeLibrariesPath <<= (sourceDirectory) (_ / "libs"),
-    mainAssetsPath <<= (sourceDirectory, assetsDirectoryName) (_ / _),
-    mainResPath <<= (sourceDirectory, resDirectoryName) (_ / _),
     managedJavaPath <<= (baseDirectory) (_ / "src_managed" / "main" / "java"),
 
     classesMinJarPath <<= (target, classesMinJarName) (_ / _),

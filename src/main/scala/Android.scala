@@ -8,12 +8,9 @@ import complete.DefaultParsers._
 
 object AndroidProject extends Plugin {
 
-  val emulatorStart = InputKey[Unit]("emulator-start", 
-    "Launches a user specified avd")
-  val emulatorStop = TaskKey[Unit]("emulator-stop",
-    "Kills the running emulator.")
-  val listDevices = TaskKey[Unit]("list-devices",
-    "List devices from the adb server.") 
+  val emulatorStart = InputKey[Unit]("emulator-start", "Launches a user specified avd")
+  val emulatorStop = TaskKey[Unit]("emulator-stop", "Kills the running emulator.")
+  val listDevices = TaskKey[Unit]("list-devices", "List devices from the adb server.") 
 
   private def emulatorStartTask = (parsedTask: TaskKey[String]) =>
     (parsedTask, toolsPath) map { (avd, toolsPath) =>

@@ -19,6 +19,7 @@ object AndroidDefaults {
   val DefaultDxJavaOpts = "-JXmx512m"
   val DefaultManifestSchema = "http://schemas.android.com/apk/res/android"
   val DefaultEnvs = List("ANDROID_SDK_HOME", "ANDROID_SDK_ROOT", "ANDROID_HOME")
+  val DefaultInstrumentationTestRunner = "android.test.InstrumentationTestRunner"
 
   lazy val settings: Seq[Setting[_]] = Seq (
     aaptName := DefaultAaaptName,
@@ -35,6 +36,11 @@ object AndroidDefaults {
     resourcesApkName := DefaultResourcesApkName,
     dxJavaOpts := DefaultDxJavaOpts,
     manifestSchema := DefaultManifestSchema, 
-    envs := DefaultEnvs 
+    envs := DefaultEnvs,
+    mainResPath <<= (sourceDirectory, resDirectoryName) (_ / _),
+    mainAssetsPath <<= (sourceDirectory, assetsDirectoryName) (_ / _),
+    manifestPath <<= (sourceDirectory, manifestName) (_ / _),
+
+    instrumentationTestRunner := DefaultInstrumentationTestRunner
   )
 }

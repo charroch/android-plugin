@@ -36,7 +36,7 @@ object AndroidManifestGenerator {
     manifestTemplateName := "AndroidManifest.xml",
     manifestTemplatePath <<= (sourceDirectory in Compile, manifestTemplateName)(_/_),
     
-    manifestPath <<= (baseDirectory, manifestName) (_ / "src_managed" / "main" / _),
+    //manifestPath <<= (baseDirectory, manifestName) (_ / "src_managed" / "main" / _),
     cleanManifest <<= (manifestPath) map (IO.delete(_)),
 
     generateManifest <<= generateManifestTask,
