@@ -1,0 +1,2 @@
+> android:android-generate-r-file
+$ exists target/src_managed/main/java/org/sbt/android/R.java

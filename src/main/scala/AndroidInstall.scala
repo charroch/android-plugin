@@ -1,3 +1,5 @@
+package android
+
 import proguard.{Configuration=>ProGuardConfiguration, ProGuard, ConfigurationParser}
 
 import sbt._

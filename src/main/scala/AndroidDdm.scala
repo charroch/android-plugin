@@ -1,3 +1,5 @@
+package android
+
 import sbt._
 import Keys._
 import complete.DefaultParsers._

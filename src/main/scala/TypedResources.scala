@@ -1,3 +1,5 @@
+package android
+
 import sbt._
 import classpath._
 import scala.xml._
