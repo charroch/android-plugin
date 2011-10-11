@@ -1,2 +1,3 @@
-> android:android-generate-r-file
+# should generate R file
+> android:gen-r
 $ exists target/src_managed/main/java/org/sbt/android/R.java

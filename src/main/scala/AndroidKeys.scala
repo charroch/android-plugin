@@ -11,10 +11,10 @@ object AndroidKeys {
 
 
   lazy val android = TaskKey[File]("android", "android jar file")
-  lazy val amanifest = SettingKey[File]("android-manifest", "Location of the AndroidManifest.xml")
+  lazy val amanifest = SettingKey[File]("manifest", "Location of the AndroidManifest.xml")
   lazy val aversion = SettingKey[String]("android-platform-version", "Version of android.jar for which the android.jar which be selected for compilation")
   lazy val jars = SettingKey[Seq[File]]("android-jars", "Jars")
-  lazy val r = TaskKey[Seq[File]]("android-generate-r-file", "Generate R file")
+  lazy val r = TaskKey[Seq[File]]("gen-r", "Generate R file")
   lazy val pkg = SettingKey[String]("android-package", "Package name")
 
   lazy val res = SettingKey[File]("android-res", "Resource folder location")
