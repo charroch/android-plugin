@@ -1,3 +1,8 @@
 # should generate R file
-> android:gen-r
-$ exists target/src_managed/main/java/org/sbt/android/R.java
+> gen-r(for android)
+$ exists target/src_managed/main/java/org/scalatools/sbt/R.java
+
+# should compile
+> compile
+$ exists target/scala-2.9.1/classes/org/scalatools/sbt/R.class
+$ exists target/scala-2.9.1/classes/org/sbt/android/MainActivity.class

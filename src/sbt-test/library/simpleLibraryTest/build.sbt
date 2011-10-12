@@ -1,6 +1,6 @@
 import android._
 
-organization := "org.scala-tools.sbt"
+organization := "org.scalatools.sbt"
 
 name := "library"
 

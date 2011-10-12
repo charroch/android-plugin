@@ -9,44 +9,64 @@ object AndroidPlugin extends sbt.Plugin {
   import AndroidKeys.{android => androidkey}
   import AndroidKeys._
 
-  lazy val librarySettings: Seq[Setting[_]] = AndroidInstallPath.settings ++ Seq(
-    r in androidkey <<= aaptGenerateTask,
-    amanifest in androidkey <<= (sourceDirectory)(_ / "AndroidManifest.xml"),
-    pkg in androidkey <<= (organization),
-    res in androidkey <<= (sourceDirectory)(_ / "res")
-  )
+  lazy val librarySettings: Seq[Setting[_]] = androidSettingsIn(Compile)
 
   def androidSettingsIn(c: Configuration): Seq[Setting[_]] =
     inConfig(c)(androidSettings0 ++ Seq(
+
+      amanifest in androidkey <<= (sourceDirectory in c)(_ / "AndroidManifest.xml"),
+      pkg in androidkey <<= (organization),
+      managedJavaPath <<= (target in c)(_ / "src_managed" / "main" / "java"),
+      makeManagedJavaPath in androidkey <<= directory(managedJavaPath),
+
+      r in androidkey <<= aaptGenerateTask,
+      r in androidkey <<= r in androidkey dependsOn (makeManagedJavaPath in androidkey),
+
+      res in androidkey in c <<= (sourceDirectory in c)(_ / "res"),
+
+      sourceGenerators in c <+= r in androidkey,
+
+      addons in androidkey := Seq(),
+
+      libraryJarPath <<= (jarPath in Android, addons in androidkey)(_ +++ _ get),
+
+      unmanagedJars in c <++= libraryJarPath map (_.map(Attributed.blank(_)))
     )) ++ Seq(
       //      cleanFiles <+= (resourceManaged in lesskey in c).identity,
       //      watchSources <++= (unmanagedSources in lesskey in c).identity
     )
 
   def lessSettings: Seq[Setting[_]] =
-    androidSettingsIn(Compile) ++ androidSettingsIn(Test)
+    AndroidInstallPath.settings ++ androidSettingsIn(Compile) ++ androidSettingsIn(Test)
 
-  def androidSettings0: Seq[Setting[_]] = Seq(
-    r in androidkey <<= aaptGenerateTask
+  def androidSettings0: Seq[Setting[_]] = AndroidInstallPath.settings ++ Seq(
+    //r in androidkey <<= aaptGenerateTask
   )
 
+
+  private def generateRFile(pkg: String, aapt: File, manifest: File, resFolder: File, jars: Seq[File], outFolder: File, out: Logger) = {
+
+  }
+
   private def aaptGenerateTask =
-    (pkg in androidkey, aaptPath in Android, amanifest in androidkey, res in androidkey, jarPath in Android, resourceManaged in androidkey) map {
-      (mPackage, aPath, mPath, resPath, jPath, javaPath) =>
-        Process(<x>
-          {aPath.absolutePath}
-          package --auto-add-overlay -m
-          --custom-package
-          {mPackage}
-          -M
-          {mPath.absolutePath}
-          -S
-          {resPath.absolutePath}
-          -I
-          {jPath.absolutePath}
-          -J
-          {javaPath.absolutePath}
-        </x>) !
+    (pkg in androidkey, aaptPath in Android, amanifest in androidkey, res in androidkey, jarPath in Android, managedJavaPath, streams) map {
+      (mPackage, aPath, mPath, resPath, jPath, javaPath, log) =>
+        val process = Process(
+          <x>
+            {aPath.absolutePath}
+            package --auto-add-overlay -m --custom-package
+            {mPackage}
+            -M
+            {mPath.absolutePath}
+            -S
+            {resPath.absolutePath}
+            -I
+            {jPath.absolutePath}
+            -J
+            {javaPath.absolutePath}
+          </x>)
+
+        if (process ! log.log == 1) sys.error("Can not generate R file for command %s" format process.toString)
 
         javaPath ** "R.java" get
     }
@@ -86,8 +106,7 @@ object AndroidPlugin extends sbt.Plugin {
       envs := DefaultEnvs
     )
   }
-
-
+  
   object AndroidInstallPath {
 
     def determineAndroidSdkPath(es: Seq[String]) = {
@@ -103,18 +122,18 @@ object AndroidPlugin extends sbt.Plugin {
       AndroidDefaults.settings ++ Seq(
         osDxName in androidkey <<= (dxName)(_ + osBatchSuffix),
 
-        platformName := "android-10",
-        platformPath <<= (sdkPath, platformName) (_ / "platforms" / _),
+        platformName := "android-11",
+        platformPath <<= (sdkPath, platformName)(_ / "platforms" / _),
 
         toolsPath in androidkey <<= (sdkPath)(_ / "tools"),
         dbPath in androidkey <<= (platformToolsPath, adbName)(_ / _),
         platformToolsPath in androidkey <<= (sdkPath)(_ / "platform-tools"),
         aaptPath in androidkey <<= (platformToolsPath, aaptName)(_ / _),
-        idlPath in androidkey  <<= (platformToolsPath, aidlName)(_ / _),
+        idlPath in androidkey <<= (platformToolsPath, aidlName)(_ / _),
         dxPath in androidkey <<= (platformToolsPath, osDxName)(_ / _),
-        jarPath <<= (platformPath, jarName) (_ / _),
+        jarPath <<= (platformPath, jarName)(_ / _),
 
-        sdkPath in androidkey  <<= (envs) {
+        sdkPath in androidkey <<= (envs) {
           es =>
             determineAndroidSdkPath(es).getOrElse(sys.error(
               "Android SDK not found. You might need to set %s".format(es.mkString(" or "))

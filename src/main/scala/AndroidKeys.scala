@@ -16,6 +16,7 @@ object AndroidKeys {
   lazy val jars = SettingKey[Seq[File]]("android-jars", "Jars")
   lazy val r = TaskKey[Seq[File]]("gen-r", "Generate R file")
   lazy val pkg = SettingKey[String]("android-package", "Package name")
+  lazy val addons = SettingKey[Seq[File]]("addons", "Addon jars used (ex google maps)")
 
   lazy val res = SettingKey[File]("android-res", "Resource folder location")
 
