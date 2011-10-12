@@ -6,6 +6,8 @@ import Keys._
 import AndroidKeys._
 import AndroidHelpers._
 
+import sbinary.DefaultProtocol.StringFormat
+
 object AndroidBase {
 
   private def aaptGenerateTask =
@@ -14,7 +16,7 @@ object AndroidBase {
     Process (<x>
       {aPath.absolutePath} package --auto-add-overlay -m
         --custom-package {mPackage}
-        -M {mPath.absolutePath}
+        -M {mPath.head.absolutePath}
         -S {resPath.absolutePath}
         -I {jPath.absolutePath}
         -J {javaPath.absolutePath}
@@ -50,17 +52,21 @@ object AndroidBase {
     }
   }
 
+  def findPath() = (manifestPath) map { p =>
+      manifest(p.head).attribute("package").getOrElse(sys.error("package not defined")).text
+  }
+
   lazy val settings: Seq[Setting[_]] = inConfig(Android) (Seq (
     platformPath <<= (sdkPath, platformName) (_ / "platforms" / _),
 
     packageApkName <<= (artifact, version) ((a, v) => String.format("%s-%s.apk", a.name, v)),
-    manifestPath <<= (sourceDirectory, manifestName) (_ / _),
+    manifestPath <<= (sourceDirectory, manifestName) map((s,m) => Seq(s / m)),
 
-    manifestPackage <<= (manifestPath) {
-      manifest(_).attribute("package").getOrElse(sys.error("package not defined")).text
-    },
-    minSdkVersion <<= (manifestPath, manifestSchema)(usesSdk(_, _, "minSdkVersion")),
-    maxSdkVersion <<= (manifestPath, manifestSchema)(usesSdk(_, _, "maxSdkVersion")),
+    manifestPackage <<= findPath,
+    manifestPackageName <<= findPath storeAs manifestPackageName triggeredBy manifestPath,
+
+    minSdkVersion <<= (manifestPath, manifestSchema) map ( (p,s) => usesSdk(p.head, s, "minSdkVersion")),
+    maxSdkVersion <<= (manifestPath, manifestSchema) map ( (p,s) => usesSdk(p.head, s, "maxSdkVersion")),
 
     nativeLibrariesPath <<= (sourceDirectory) (_ / "libs"),
     mainAssetsPath <<= (sourceDirectory, assetsDirectoryName) (_ / _),
@@ -73,32 +79,12 @@ object AndroidBase {
     packageApkPath <<= (target, packageApkName) (_ / _),
     useProguard := true,
 
-    addonsJarPath <<= (manifestPath, manifestSchema, mapsJarPath) {
-      (mPath, man, mapsPath) =>
-      for {
-        lib <- manifest(mPath) \ "application" \ "uses-library"
-        p = lib.attribute(man, "name").flatMap {
-          _.text match {
-            case "com.google.android.maps" => Some(mapsPath)
-            case _ => None
-          }
-        }
-        if p.isDefined
-      } yield p.get
-    },
-
-    apiLevel <<= (minSdkVersion, platformName) { (min, pName) =>
+    apiLevel <<= (minSdkVersion, platformName) map { (min, pName) =>
       min.getOrElse(platformName2ApiLevel(pName))
     },
 
     jarPath <<= (platformPath, jarName) (_ / _),
-    mapsJarPath <<= (addonsPath) (_ / AndroidDefaults.DefaultMapsJarName),
-
-    addonsPath <<= (sdkPath, apiLevel) { (sPath, api) =>
-      sPath / "add-ons" / ("addon_google_apis_google_inc_" + api) / "libs"
-    },
-
-    libraryJarPath <<= (jarPath, addonsJarPath) (_ +++ _ get),
+    libraryJarPath <<= (jarPath (_ get)),
 
     proguardOption := "",
     proguardExclude <<=

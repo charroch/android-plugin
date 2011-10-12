@@ -2,6 +2,8 @@ package android
 
 import sbt._
 
+import Keys._
+
 /*!# Android Keys
 `AndroidKeys` contains all the `SettingKey`s and `TaskKey`s for a standard
 Android project.
@@ -25,18 +27,17 @@ object AndroidKeys {
   val keyalias = SettingKey[String]("key-alias")
   val versionCode = SettingKey[Int]("version-code")
 
-  /**Proguard Settings */
+  /** Proguard Settings */
   val proguardOption = SettingKey[String]("proguard-option")
   val libraryJarPath = SettingKey[Seq[File]]("library-path")
 
-  /**Default Settings */
+  /** Default Settings */
   val aaptName = SettingKey[String]("aapt-name")
   val adbName = SettingKey[String]("adb-name")
   val aidlName = SettingKey[String]("aidl-name")
   val dxName = SettingKey[String]("dx-name")
   val manifestName = SettingKey[String]("manifest-name")
   val jarName = SettingKey[String]("jar-name")
-  val mapsJarName = SettingKey[String]("maps-jar-name")
   val assetsDirectoryName = SettingKey[String]("assets-dir-name")
   val resDirectoryName = SettingKey[String]("res-dir-name")
   val classesMinJarName = SettingKey[String]("classes-min-jar-name")
@@ -46,11 +47,11 @@ object AndroidKeys {
   val manifestSchema = SettingKey[String]("manifest-schema")
   val envs = SettingKey[Seq[String]]("envs")
 
-  /**Determined Settings */
+  /** Determined Settings */
   val packageApkName = SettingKey[String]("package-apk-name")
   val osDxName = SettingKey[String]("os-dx-name")
 
-  /**Path Settings */
+  /** Path Settings */
   val sdkPath = SettingKey[File]("sdk-path")
   val toolsPath = SettingKey[File]("tools-path")
   val dbPath = SettingKey[File]("db-path")
@@ -59,18 +60,17 @@ object AndroidKeys {
   val idlPath = SettingKey[File]("idl-path")
   val dxPath = SettingKey[File]("dx-path")
 
-  /**Base Settings */
+  /** Base Settings */
   val platformToolsPath = SettingKey[File]("platform-tools-path")
-  val manifestPackage = SettingKey[String]("manifest-package")
-  val minSdkVersion = SettingKey[Option[Int]]("min-sdk-version")
-  val maxSdkVersion = SettingKey[Option[Int]]("max-sdk-version")
-  val apiLevel = SettingKey[Int]("api-level")
+  val manifestPackage = TaskKey[String]("manifest-package")
+  val manifestPackageName = TaskKey[String]("manifest-package-name")
+  val minSdkVersion = TaskKey[Option[Int]]("min-sdk-version")
+  val maxSdkVersion = TaskKey[Option[Int]]("max-sdk-version")
+  val apiLevel = TaskKey[Int]("api-level")
 
-  val manifestPath = SettingKey[File]("manifest-path")
+  val manifestPath = TaskKey[Seq[File]]("manifest-path")
   val nativeLibrariesPath = SettingKey[File]("natives-lib-path")
-  val addonsPath = SettingKey[File]("addons-path")
   val jarPath = SettingKey[File]("jar-path")
-  val mapsJarPath = SettingKey[File]("maps-jar-path")
   val mainAssetsPath = SettingKey[File]("main-asset-path")
   val mainResPath = SettingKey[File]("main-res-path")
   val managedJavaPath = SettingKey[File]("managed-java-path")
@@ -80,30 +80,28 @@ object AndroidKeys {
   val packageApkPath = SettingKey[File]("package-apk-path")
   val useProguard = SettingKey[Boolean]("use-proguard")
 
-  val addonsJarPath = SettingKey[Seq[File]]("addons-jar-path")
-
-  /**Install Settings */
+  /** Install Settings */
   val packageConfig = SettingKey[ApkConfig]("package-config",
     "Generates a Apk Config")
 
-  /**Typed Resource Settings */
+  /** Typed Resource Settings */
   val managedScalaPath = SettingKey[File]("managed-scala-path")
-  val typedResource = SettingKey[File]("typed-resource",
+  val typedResource = TaskKey[File]("typed-resource",
     """Typed resource file to be generated, also includes
        interfaces to access these resources.""")
   val layoutResources = SettingKey[Seq[File]]("layout-resources")
 
-  /**Market Publish Settings */
+  /** Market Publish Settings */
   val keystorePath = SettingKey[File]("key-store-path")
   val zipAlignPath = SettingKey[File]("zip-align-path", "Path to zipalign")
   val packageAlignedName = SettingKey[String]("package-aligned-name")
   val packageAlignedPath = SettingKey[File]("package-aligned-path")
 
-  /**Manifest Generator */
+  /** Manifest Generator */
   val manifestTemplateName = SettingKey[String]("manifest-template-name")
   val manifestTemplatePath = SettingKey[File]("manifest-template-path")
 
-  /**Base Tasks */
+  /** Base Tasks */
   val aaptGenerate = TaskKey[Seq[File]]("aapt-generate", "Generate R.java")
   val aidlGenerate = TaskKey[Seq[File]]("aidl-generate",
     "Generate Java classes from .aidl files.")
@@ -113,7 +111,7 @@ object AndroidKeys {
 
   val makeManagedJavaPath = TaskKey[Unit]("make-managed-java-path")
 
-  /**Installable Tasks */
+  /** Installable Tasks */
   val installEmulator = TaskKey[Unit]("install-emulator")
   val uninstallEmulator = TaskKey[Unit]("uninstall-emulator")
 
@@ -132,13 +130,13 @@ object AndroidKeys {
 
   val makeAssetPath = TaskKey[Unit]("make-assest-path")
 
-  /**Launch Tasks */
+  /** Launch Tasks */
   val startDevice = TaskKey[Unit]("start-device",
     "Start package on device after installation")
   val startEmulator = TaskKey[Unit]("start-emulator",
     "Start package on emulator after installation")
 
-  /**ddm Support tasks */
+  /** ddm Support tasks */
   val stopBridge = TaskKey[Unit]("stop-bridge",
     "Terminates the ADB debugging bridge")
   val screenshotEmulator = TaskKey[File]("screenshot-emulator",
@@ -157,8 +155,8 @@ object AndroidKeys {
   val threadsDevice = InputKey[Unit]("threads-device",
     "Show thread dump from the device")
 
-  /**Market Publish tasks */
-  val prepareMarket = TaskKey[Unit]("prepare-market",
+  /** Market Publish tasks */
+  val prepareMarket = TaskKey[File]("prepare-market",
     "Prepare asset for Market publication.")
   val zipAlign = TaskKey[File]("zip-align", "Run zipalign on signed jar.")
   val signRelease = TaskKey[File]("sign-release",
@@ -166,20 +164,17 @@ object AndroidKeys {
   val cleanAligned = TaskKey[Unit]("clean-aligned", "Remove zipaligned jar")
 
 
-  /**TypedResources Task */
+  /** TypedResources Task */
   val generateTypedResources = TaskKey[Seq[File]]("generate-typed-resources",
     """Produce a file TR.scala that contains typed
        references to layout resources.""")
 
-  /**Manifest Generator tasks*/
-  val generateManifest = TaskKey[File]("generate-manifest",
+  /** Manifest Generator tasks*/
+  val generateManifest = TaskKey[Seq[File]]("generate-manifest",
     """Generates a customized AndroidManifest.xml with
        current build number and debug settings.""")
 
-  val cleanManifest = TaskKey[Unit]("clean-manifest",
-    "Deletes the generated Android manifest")
-
-  /**Test Project Tasks */
+  /** Test Project Tasks */
   val testEmulator = TaskKey[Unit]("test-emulator", "runs tests in emulator")
   val testDevice = TaskKey[Unit]("test-device", "runs tests on device")
 }

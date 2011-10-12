@@ -1,25 +1,26 @@
 package android
 
 import sbt._
+import complete.Parser
 import Keys._
 import complete.DefaultParsers._
 
 import AndroidKeys._
-import AndroidHelpers._
 
 import com.android.ddmlib.AndroidDebugBridge
 import com.android.ddmlib.AndroidDebugBridge.IClientChangeListener
 import com.android.ddmlib.IDevice
-import com.android.ddmlib.Log
-import com.android.ddmlib.RawImage
 import com.android.ddmlib.ClientData
 import com.android.ddmlib.Client
 import com.android.ddmlib.ThreadInfo
 import com.android.ddmlib.ClientData.IHprofDumpHandler
 
-import java.io.{File, OutputStream, FileOutputStream, IOException}
+import java.io.{File, OutputStream, FileOutputStream}
 import java.awt.image.{BufferedImage, RenderedImage}
 import javax.imageio.ImageIO
+
+import scala.collection.mutable
+import sbinary.DefaultProtocol.StringFormat
 
 object AndroidDdm {
   var bridge: Option[AndroidDebugBridge] = None
@@ -39,17 +40,17 @@ object AndroidDdm {
           // thread status changed (thread died etc)
           if (client.getClientData.getThreads != null) {
             val tnames = for (tinfo <- client.getClientData.getThreads)
-              yield { tinfo.getThreadName() }
+              yield { tinfo.getThreadName }
             infos.retain((name,_) => tnames.contains(name))
           }
         case Client.CHANGE_THREAD_STACKTRACE =>
           if (client.getClientData.getThreads != null) {
             for (tinfo <- client.getClientData.getThreads; if
                  tinfo.getStackTrace != null) {
-                 infos.put(tinfo.getThreadName(), tinfo)
+                 infos.put(tinfo.getThreadName, tinfo)
             }
           }
-        case _ => //System.out.println("client: "+client+" mask: "+mask)
+        case _ => //System.out.println("client: "+client.getClientData.getClientDescription+" mask: "+mask)
       }
     }
   }
@@ -58,16 +59,16 @@ object AndroidDdm {
     bridge.getOrElse {
       AndroidDebugBridge.addClientChangeListener(clientListener)
       AndroidDebugBridge.init(clientSupport)
-      java.lang.Runtime.getRuntime().addShutdownHook(new Thread() {
-        override def run() { terminateBridge }
+      java.lang.Runtime.getRuntime.addShutdownHook(new Thread() {
+        override def run() { terminateBridge() }
       })
       bridge = Some(AndroidDebugBridge.createBridge(path, false))
       bridge.get
     }
   }
 
-  def terminateBridge {
-    AndroidDebugBridge.terminate
+  def terminateBridge() {
+    AndroidDebugBridge.terminate()
     bridge = None
   }
 
@@ -76,11 +77,11 @@ object AndroidDdm {
     var count = 0
     val bridged = createBridge(path, true)
 
-    while (!bridged.hasInitialDeviceList() && count < 50) {
+    while (!bridged.hasInitialDeviceList && count < 50) {
       Thread.sleep(100)
       count += 1
     }
-    if (!bridged.hasInitialDeviceList()) {
+    if (!bridged.hasInitialDeviceList) {
       System.err.println("Timeout getting device list")
       None
     } else {
@@ -110,7 +111,7 @@ object AndroidDdm {
   // ported from http://dustingram.com/wiki/Device_Screenshots_with_the_Android_Debug_Bridge
   def screenshot(emulator: Boolean, landscape: Boolean, path: String):Option[Screenshot] = {
     withDevice(emulator, path) { device =>
-      val raw = device.getScreenshot()
+      val raw = device.getScreenshot
       val (width2, height2) = if (landscape) (raw.height, raw.width) else (raw.width, raw.height)
       val image = new BufferedImage(width2, height2, BufferedImage.TYPE_INT_RGB)
       var index = 0
@@ -131,9 +132,10 @@ object AndroidDdm {
                (success: (Client, Array[Byte]) => Unit) {
     withClient(emulator, path, app) { client =>
         ClientData.setHprofDumpHandler(new IHprofDumpHandler() {
-          override def onSuccess(path: String, client: Client) = sys.error("not supported")
-          override def onSuccess(data: Array[Byte], client: Client) = success(client, data)
-          override def onEndFailure(client: Client, message:String) = sys.error(message)
+
+          override def onSuccess(path: String, client: Client) { sys.error("not supported") }
+          override def onSuccess(data: Array[Byte], client: Client) { success(client, data) }
+          override def onEndFailure(client: Client, message:String) { sys.error(message) }
         })
         client.dumpHprof()
         streams.log.info("requested hprof dump")
@@ -143,13 +145,13 @@ object AndroidDdm {
   def fetchThreads(app: String, path: String, emulator: Boolean):Option[Array[ThreadInfo]] = {
     withClient(emulator, path, app) { client =>
       client.setThreadUpdateEnabled(true)
-      client.requestThreadUpdate
+      client.requestThreadUpdate()
       val threads = client.getClientData.getThreads
       if (threads != null)
         threads.foreach(t => client.requestThreadStackTrace(t.getThreadId))
       threads
     }.orElse { // client died
-      infos.clear
+      //infos.clear()
       None
     }
   }
@@ -168,10 +170,10 @@ object AndroidDdm {
     file(hprof)
   }
 
-  case class Screenshot(val r: RenderedImage) {
+  case class Screenshot(r: RenderedImage) {
     def toFile(format: String, f: File, str:TaskStreams):File   = { ImageIO.write(r, format, f); f }
     def toFile(format: String, s: String, str:TaskStreams):File = {
-      val tstamp = System.currentTimeMillis().toString()
+      val tstamp = System.currentTimeMillis().toString
       val file = new File(String.format("%s-%s.%s", s, tstamp, format))
       str.log.info("screenshot written to "+file.getName)
       toFile(format, file, str)
@@ -197,21 +199,21 @@ object AndroidDdm {
         if (includeStack)
           s.log.info(tinfo.getStackTrace.map(_.toString).mkString("\n"))
       }
+
       p match {
         case "all" => infos.toList
                            .sortWith({case((_,i1),(_,i2)) => i1.getUtime > i2.getUtime })
                            .foreach({case (_,info) => doPrint(info, false)})
-        case _     => doPrint(infos.get(p).getOrElse(sys.error("thread not found")), true)
+        case  _    => doPrint(infos.get(p).getOrElse(sys.error("thread not found")), true)
       }
       ()
     }
 
-  def threadList(app: String, path: String, emu: Boolean) = (s: State) => {
+  def threadListParser = (s: State, app: String, path: String, emu: Boolean) => {
     fetchThreads(app, path, emu)
     Space ~> infos.map({ case (k, v) => token(k) })
-                  .reduceLeftOption(_ | _)
-                  .map(_ | token("all"))
-                  .getOrElse(token("<name>"))
+                    .reduceLeftOption(_ | _)
+                    .getOrElse(token("<name>"))
   }
 
   lazy val settings: Seq[Setting[_]] = inConfig(Android) (Seq (
@@ -228,15 +230,17 @@ object AndroidDdm {
       dumpHprof(m, p.absolutePath, false, s)(writeHprof)
     },
     threadsEmulator <<= InputTask(
-        (manifestPackage, dbPath) apply { (m,p) => threadList(m, p.absolutePath, true) })
-        (printStackTask)
-    ,
+        (resolvedScoped, dbPath) ( (ctx, path) => (s: State) =>
+        threadListParser(s, loadFromContext(manifestPackageName, ctx, s) getOrElse "", path.absolutePath, true)))
+        (printStackTask),
+
     threadsDevice <<= InputTask(
-        (manifestPackage, dbPath) apply { (m,p) => threadList(m, p.absolutePath, false) })
-        (printStackTask)
-    ,
+        (resolvedScoped, dbPath) ( (ctx, path) => (s: State) =>
+        threadListParser(s, loadFromContext(manifestPackageName, ctx, s) getOrElse "", path.absolutePath, false)))
+        (printStackTask),
+
     stopBridge <<= (streams) map { (s) =>
-      terminateBridge
+      terminateBridge()
       s.log.info("terminated debug bridge. older versions of the SDK might not be "+
                  "able to call init() again.")
     }

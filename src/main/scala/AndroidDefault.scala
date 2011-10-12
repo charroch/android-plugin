@@ -12,7 +12,6 @@ object AndroidDefaults {
   val DefaultDxName = "dx"
   val DefaultAndroidManifestName = "AndroidManifest.xml"
   val DefaultAndroidJarName = "android.jar"
-  val DefaultMapsJarName = "maps.jar"
   val DefaultAssetsDirectoryName = "assets"
   val DefaultResDirectoryName = "res"
   val DefaultClassesMinJarName = "classes.min.jar"
@@ -29,7 +28,6 @@ object AndroidDefaults {
     dxName := DefaultDxName,
     manifestName := DefaultAndroidManifestName, 
     jarName := DefaultAndroidJarName, 
-    mapsJarName := DefaultMapsJarName,
     assetsDirectoryName := DefaultAssetsDirectoryName,
     resDirectoryName := DefaultResDirectoryName,
     classesMinJarName := DefaultClassesMinJarName,
