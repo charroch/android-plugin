@@ -12,12 +12,11 @@ object AndroidPlugin extends sbt.Plugin {
   lazy val librarySettings: Seq[Setting[_]] = androidSettingsIn(Compile)
 
   def androidSettingsIn(c: Configuration): Seq[Setting[_]] =
-    inConfig(c)(androidSettings0 ++ Seq(
+    inConfig(c)(androidSettings0 ++ AndroidDefaults.commonAndroidSettingsIn(c) ++ Seq(
 
       amanifest in androidkey <<= (sourceDirectory in c)(_ / "AndroidManifest.xml"),
       pkg in androidkey <<= (organization),
-      managedJavaPath <<= (target in c)(_ / "src_managed" / "main" / "java"),
-      makeManagedJavaPath in androidkey <<= directory(managedJavaPath),
+
 
       r in androidkey <<= aaptGenerateTask,
       r in androidkey <<= r in androidkey dependsOn (makeManagedJavaPath in androidkey),
@@ -46,15 +45,6 @@ object AndroidPlugin extends sbt.Plugin {
       //
       //      // add the .war file to what gets published
       //      addArtifact(artifact in(Compile, packageDebug), packageDebug),
-
-
-      classesMinJarPath <<= (target, classesMinJarName)(_ / _),
-
-
-      packageApkPath in androidkey <<= (target, packageApkName)(_ / _),
-      resourcesApkPath in androidkey <<= (target, resourcesApkName)(_ / _),
-      classesDexPath in androidkey <<= (target, classesDexName)(_ / _),
-      nativeLibrariesPath in androidkey <<= (sourceDirectory)(_ / "libs"),
 
       packageConfig <<=
         (toolsPath in Android,
@@ -85,9 +75,11 @@ object AndroidPlugin extends sbt.Plugin {
   def lessSettings: Seq[Setting[_]] =
     AndroidInstallPath.settings ++ androidSettingsIn(Compile) ++ androidSettingsIn(Test)
 
-  def androidSettings0: Seq[Setting[_]] = AndroidInstallPath.settings ++ Seq(
-    //r in androidkey <<= aaptGenerateTask
-  )
+  def androidSettings0: Seq[Setting[_]] =
+    AndroidInstallPath.settings ++
+      AndroidDefaults.settings ++ Seq(
+      //r in androidkey <<= aaptGenerateTask
+    )
 
   def androidProguardSettings: Seq[Setting[_]] = {
     Seq(
@@ -154,42 +146,6 @@ object AndroidPlugin extends sbt.Plugin {
       (mPackage, aPath, mPath, resPath, jPath, javaPath, log) =>
         generateRFile(mPackage, aPath, mPath, resPath, jPath, javaPath, log.log)
     }
-
-  object AndroidDefaults {
-    val DefaultAaaptName = "aapt"
-    val DefaultAadbName = "adb"
-    val DefaultAaidlName = "aidl"
-    val DefaultDxName = "dx"
-    val DefaultAndroidManifestName = "AndroidManifest.xml"
-    val DefaultAndroidJarName = "android.jar"
-    val DefaultMapsJarName = "maps.jar"
-    val DefaultAssetsDirectoryName = "assets"
-    val DefaultResDirectoryName = "res"
-    val DefaultClassesMinJarName = "classes.min.jar"
-    val DefaultClassesDexName = "classes.dex"
-    val DefaultResourcesApkName = "resources.apk"
-    val DefaultDxJavaOpts = "-JXmx512m"
-    val DefaultManifestSchema = "http://schemas.android.com/apk/res/android"
-    val DefaultEnvs = List("ANDROID_SDK_HOME", "ANDROID_SDK_ROOT", "ANDROID_HOME")
-
-    lazy val settings: Seq[Setting[_]] = Seq(
-      aaptName := DefaultAaaptName,
-      adbName := DefaultAadbName,
-      aidlName := DefaultAaidlName,
-      dxName := DefaultDxName,
-      manifestName := DefaultAndroidManifestName,
-      jarName := DefaultAndroidJarName,
-      mapsJarName := DefaultMapsJarName,
-      assetsDirectoryName := DefaultAssetsDirectoryName,
-      resDirectoryName := DefaultResDirectoryName,
-      classesMinJarName := DefaultClassesMinJarName,
-      classesDexName := DefaultClassesDexName,
-      resourcesApkName := DefaultResourcesApkName,
-      dxJavaOpts := DefaultDxJavaOpts,
-      manifestSchema := DefaultManifestSchema,
-      envs := DefaultEnvs
-    )
-  }
 
   object AndroidInstallPath {
 

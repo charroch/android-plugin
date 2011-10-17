@@ -4,6 +4,7 @@ import sbt._
 
 import Keys._
 import AndroidKeys._
+import AndroidKeys.{android => androidkey}
 
 object AndroidDefaults {
   val DefaultAaaptName = "aapt"
@@ -22,13 +23,13 @@ object AndroidDefaults {
   val DefaultManifestSchema = "http://schemas.android.com/apk/res/android"
   val DefaultEnvs = List("ANDROID_SDK_HOME", "ANDROID_SDK_ROOT", "ANDROID_HOME")
 
-  lazy val settings: Seq[Setting[_]] = Seq (
+  lazy val settings: Seq[Setting[_]] = Seq(
     aaptName := DefaultAaaptName,
     adbName := DefaultAadbName,
     aidlName := DefaultAaidlName,
     dxName := DefaultDxName,
-    manifestName := DefaultAndroidManifestName, 
-    jarName := DefaultAndroidJarName, 
+    manifestName := DefaultAndroidManifestName,
+    jarName := DefaultAndroidJarName,
     mapsJarName := DefaultMapsJarName,
     assetsDirectoryName := DefaultAssetsDirectoryName,
     resDirectoryName := DefaultResDirectoryName,
@@ -36,7 +37,19 @@ object AndroidDefaults {
     classesDexName := DefaultClassesDexName,
     resourcesApkName := DefaultResourcesApkName,
     dxJavaOpts := DefaultDxJavaOpts,
-    manifestSchema := DefaultManifestSchema, 
-    envs := DefaultEnvs 
+    manifestSchema := DefaultManifestSchema,
+    envs := DefaultEnvs
+  )
+
+  // Common case scenario for naming
+  def commonAndroidSettingsIn(c: Configuration): Seq[Setting[_]] = Seq(
+    managedJavaPath <<= (target in c)(_ / "src_managed" / "main" / "java"),
+    makeManagedJavaPath in androidkey <<= AndroidHelpers.directory(managedJavaPath),
+    classesMinJarPath <<= (target in c, classesMinJarName)(_ / _),
+    packageApkPath in androidkey <<= (target in c, packageApkName)(_ / _),
+    resourcesApkPath in androidkey <<= (target in c, resourcesApkName)(_ / _),
+    classesDexPath in androidkey <<= (target in c, classesDexName)(_ / _),
+    nativeLibrariesPath in androidkey <<= (sourceDirectory in c)(_ / "libs"),
+    packageApkName in androidkey := "test"
   )
 }
