@@ -12,3 +12,11 @@ $ exists target/scala-2.9.1/classes/org/sbt/android/MainActivity.class
 $ delete target/scala-2.9.1/classes/org/scalatools/sbt/R.class
 $ delete target/src_managed/main/java/org/scalatools/sbt/R.java
 
+# without robolectric it should fail
+-> test
+
+# should package into an APK
+$ pause
+> check
+$ exists target/test.apk
+

@@ -18,6 +18,8 @@ libraryDependencies ++= Seq(
   "net.sf.proguard" % "proguard" % "4.4"
 )
 
+libraryDependencies <+= sbtVersion(v => "com.github.siasia" %% "xsbt-proguard-plugin" % (v+"-0.1.1"))
+
 sbtPlugin := true
 
 seq(ScriptedPlugin.scriptedSettings: _*)

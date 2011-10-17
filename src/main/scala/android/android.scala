@@ -21,7 +21,7 @@ object AndroidPlugin extends sbt.Plugin {
 
       r in androidkey <<= aaptGenerateTask,
       r in androidkey <<= r in androidkey dependsOn (makeManagedJavaPath in androidkey),
-      aidl in androidkey <<=        aidlGenerateTask ,
+      aidl in androidkey <<= aidlGenerateTask,
       res in androidkey in c <<= (sourceDirectory in c)(_ / "res"),
 
       sourceGenerators in c <+= r in androidkey,
@@ -31,11 +31,56 @@ object AndroidPlugin extends sbt.Plugin {
 
       libraryJarPath <<= (jarPath in Android, addons in androidkey)(_ +++ _ get),
 
-      unmanagedJars in c <++= libraryJarPath map (_.map(Attributed.blank(_)))
+      unmanagedJars in c <++= libraryJarPath map (_.map(Attributed.blank(_))),
+
+
+      //
+      //      // disable .jar publishing
+      //      publishArtifact in(c, packageBin) := false,
+      //
+      //      // create an Artifact for publishing the .war file
+      //      artifact in(c, packageDebug) ~= {
+      //        (art: Artifact) =>
+      //          art.copy(`type` = "apk", extension = "apk")
+      //      },
+      //
+      //      // add the .war file to what gets published
+      //      addArtifact(artifact in(Compile, packageDebug), packageDebug),
+
+
+      classesMinJarPath <<= (target, classesMinJarName)(_ / _),
+
+
+      packageApkPath in androidkey <<= (target, packageApkName)(_ / _),
+      resourcesApkPath in androidkey <<= (target, resourcesApkName)(_ / _),
+      classesDexPath in androidkey <<= (target, classesDexName)(_ / _),
+      nativeLibrariesPath in androidkey <<= (sourceDirectory)(_ / "libs"),
+
+      packageConfig <<=
+        (toolsPath in Android,
+          packageApkPath in androidkey,
+          resourcesApkPath in androidkey,
+          classesDexPath in androidkey,
+          nativeLibrariesPath in androidkey,
+          classesMinJarPath in androidkey,
+          resourceDirectory in androidkey)
+          (ApkConfig(_, _, _, _, _, _, _)),
+
+      packageDebug <<= packageTask(true),
+      sbt.Keys.`package` in c <<= packageDebug,
+      sbt.Keys.`package` in market in c <<= packageRelease in androidkey,
+      packageRelease in androidkey <<= packageTask(false)
     )) ++ Seq(
-      //      cleanFiles <+= (resourceManaged in lesskey in c).identity,
-      //      watchSources <++= (unmanagedSources in lesskey in c).identity
     )
+
+
+  private def packageTask(debug: Boolean): Project.Initialize[Task[File]] = (packageConfig, streams) map {
+    (c, s) =>
+      val builder = new ApkBuilder(c, debug)
+      builder.build.fold(s.log.error(_), s.log.info(_))
+      s.log.debug(builder.outputStream.toString)
+      c.packageApkPath
+  }
 
   def lessSettings: Seq[Setting[_]] =
     AndroidInstallPath.settings ++ androidSettingsIn(Compile) ++ androidSettingsIn(Test)
@@ -43,6 +88,14 @@ object AndroidPlugin extends sbt.Plugin {
   def androidSettings0: Seq[Setting[_]] = AndroidInstallPath.settings ++ Seq(
     //r in androidkey <<= aaptGenerateTask
   )
+
+  def androidProguardSettings: Seq[Setting[_]] = {
+    Seq(
+      //      proguardOptions ++= Seq(
+      //        keepAllScala
+      //      )
+    )
+  }
 
   private def aidlGenerateTask =
     (sourceDirectories, idlPath in Android, managedJavaPath, javaSource, streams) map {
@@ -152,10 +205,7 @@ object AndroidPlugin extends sbt.Plugin {
     lazy val settings: Seq[Setting[_]] = inConfig(Android) {
       AndroidDefaults.settings ++ Seq(
         osDxName <<= (dxName)(_ + osBatchSuffix),
-
-        platformName := "android-11",
         platformPath <<= (sdkPath, platformName)(_ / "platforms" / _),
-
         toolsPath <<= (sdkPath)(_ / "tools"),
         dbPath <<= (platformToolsPath, adbName)(_ / _),
         platformToolsPath <<= (sdkPath)(_ / "platform-tools"),
