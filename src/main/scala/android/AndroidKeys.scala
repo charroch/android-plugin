@@ -15,6 +15,7 @@ object AndroidKeys {
   lazy val aversion = SettingKey[String]("android-platform-version", "Version of android.jar for which the android.jar which be selected for compilation")
   lazy val jars = SettingKey[Seq[File]]("android-jars", "Jars")
   lazy val r = TaskKey[Seq[File]]("gen-r", "Generate R file")
+  lazy val aidl = TaskKey[Seq[File]]("gen-aidl", "Generate R file")
   lazy val pkg = SettingKey[String]("android-package", "Package name")
   lazy val addons = SettingKey[Seq[File]]("addons", "Addon jars used (ex google maps)")
 

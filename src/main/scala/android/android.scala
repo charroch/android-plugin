@@ -21,10 +21,11 @@ object AndroidPlugin extends sbt.Plugin {
 
       r in androidkey <<= aaptGenerateTask,
       r in androidkey <<= r in androidkey dependsOn (makeManagedJavaPath in androidkey),
-
+      aidl in androidkey <<=        aidlGenerateTask ,
       res in androidkey in c <<= (sourceDirectory in c)(_ / "res"),
 
       sourceGenerators in c <+= r in androidkey,
+      sourceGenerators in c <+= aidl in androidkey,
 
       addons in androidkey := Seq(),
 
@@ -43,32 +44,62 @@ object AndroidPlugin extends sbt.Plugin {
     //r in androidkey <<= aaptGenerateTask
   )
 
+  private def aidlGenerateTask =
+    (sourceDirectories, idlPath in Android, managedJavaPath, javaSource, streams) map {
+      (sDirs, idPath, javaPath, jSource, s) =>
+        generateAIDLFile(sDirs, idPath, javaPath, jSource, s.log)
+    }
 
-  private def generateRFile(pkg: String, aapt: File, manifest: File, resFolder: File, jars: Seq[File], outFolder: File, out: Logger) = {
+  private def generateAIDLFile(sources: Seq[File], aidlExecutable: File, outFolder: File, javaSourceFolder: File, out: Logger): Seq[File] = {
+    val aidlPaths = sources.map(_ ** "*.aidl").reduceLeft(_ +++ _).get
+    if (aidlPaths.isEmpty) {
+      out.debug("no AIDL files found, skipping")
+      Nil
+    } else {
+      val processor = aidlPaths.map {
+        ap =>
+          aidlExecutable.absolutePath ::
+            "-o" + outFolder.absolutePath ::
+            "-I" + javaSourceFolder.absolutePath ::
+            ap.absolutePath :: Nil
+      }.foldLeft(None.asInstanceOf[Option[ProcessBuilder]]) {
+        (f, s) =>
+          f match {
+            case None => Some(s)
+            case Some(first) => Some(first #&& s)
+          }
+      }.get
+      out.debug("generating aidl " + processor)
+      processor !
 
+      val rPath = outFolder ** "R.java"
+      outFolder ** "*.java" --- (rPath) get
+    }
+  }
+
+  private def generateRFile(pkg: String, aapt: File, manifest: File, resFolder: File, androidJar: File, outFolder: File, out: Logger): Seq[File] = {
+    val process = Process(
+      <x>
+        {aapt.absolutePath}
+        package --auto-add-overlay -m --custom-package
+        {pkg}
+        -M
+        {manifest.absolutePath}
+        -S
+        {resFolder.absolutePath}
+        -I
+        {androidJar.absolutePath}
+        -J
+        {outFolder.absolutePath}
+      </x>)
+    if (process ! out == 1) sys.error("Can not generate R file for command %s" format process.toString)
+    outFolder ** "R.java" get
   }
 
   private def aaptGenerateTask =
     (pkg in androidkey, aaptPath in Android, amanifest in androidkey, res in androidkey, jarPath in Android, managedJavaPath, streams) map {
       (mPackage, aPath, mPath, resPath, jPath, javaPath, log) =>
-        val process = Process(
-          <x>
-            {aPath.absolutePath}
-            package --auto-add-overlay -m --custom-package
-            {mPackage}
-            -M
-            {mPath.absolutePath}
-            -S
-            {resPath.absolutePath}
-            -I
-            {jPath.absolutePath}
-            -J
-            {javaPath.absolutePath}
-          </x>)
-
-        if (process ! log.log == 1) sys.error("Can not generate R file for command %s" format process.toString)
-
-        javaPath ** "R.java" get
+        generateRFile(mPackage, aPath, mPath, resPath, jPath, javaPath, log.log)
     }
 
   object AndroidDefaults {
@@ -106,7 +137,7 @@ object AndroidPlugin extends sbt.Plugin {
       envs := DefaultEnvs
     )
   }
-  
+
   object AndroidInstallPath {
 
     def determineAndroidSdkPath(es: Seq[String]) = {
@@ -120,20 +151,20 @@ object AndroidPlugin extends sbt.Plugin {
 
     lazy val settings: Seq[Setting[_]] = inConfig(Android) {
       AndroidDefaults.settings ++ Seq(
-        osDxName in androidkey <<= (dxName)(_ + osBatchSuffix),
+        osDxName <<= (dxName)(_ + osBatchSuffix),
 
         platformName := "android-11",
         platformPath <<= (sdkPath, platformName)(_ / "platforms" / _),
 
-        toolsPath in androidkey <<= (sdkPath)(_ / "tools"),
-        dbPath in androidkey <<= (platformToolsPath, adbName)(_ / _),
-        platformToolsPath in androidkey <<= (sdkPath)(_ / "platform-tools"),
-        aaptPath in androidkey <<= (platformToolsPath, aaptName)(_ / _),
-        idlPath in androidkey <<= (platformToolsPath, aidlName)(_ / _),
-        dxPath in androidkey <<= (platformToolsPath, osDxName)(_ / _),
+        toolsPath <<= (sdkPath)(_ / "tools"),
+        dbPath <<= (platformToolsPath, adbName)(_ / _),
+        platformToolsPath <<= (sdkPath)(_ / "platform-tools"),
+        aaptPath <<= (platformToolsPath, aaptName)(_ / _),
+        idlPath <<= (platformToolsPath, aidlName)(_ / _),
+        dxPath <<= (platformToolsPath, osDxName)(_ / _),
         jarPath <<= (platformPath, jarName)(_ / _),
 
-        sdkPath in androidkey <<= (envs) {
+        sdkPath <<= (envs) {
           es =>
             determineAndroidSdkPath(es).getOrElse(sys.error(
               "Android SDK not found. You might need to set %s".format(es.mkString(" or "))
