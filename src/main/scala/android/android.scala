@@ -46,6 +46,7 @@ object AndroidPlugin extends sbt.Plugin {
       //      // add the .war file to what gets published
       //      addArtifact(artifact in(Compile, packageDebug), packageDebug),
 
+      aaptPackage in c <<= aaptPackageTask,
       packageConfig <<=
         (toolsPath in Android,
           packageApkPath in androidkey,

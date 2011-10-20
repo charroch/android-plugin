@@ -85,14 +85,11 @@ object AndroidKeys {
   val addonsJarPath = SettingKey[Seq[File]]("addons-jar-path")
 
   /**Install Settings */
-  val packageConfig = SettingKey[ApkConfig]("package-config",
-    "Generates a Apk Config")
+  val packageConfig = SettingKey[ApkConfig]("package-config", "Generates a Apk Config")
 
   /**Typed Resource Settings */
   val managedScalaPath = SettingKey[File]("managed-scala-path")
-  val typedResource = SettingKey[File]("typed-resource",
-    """Typed resource file to be generated, also includes
-       interfaces to access these resources.""")
+  val typedResource = SettingKey[File]("typed-resource", "Typed resource file to be generated, also includes interfaces to access these resources.")
   val layoutResources = SettingKey[Seq[File]]("layout-resources")
 
   /**Market Publish Settings */
@@ -107,8 +104,7 @@ object AndroidKeys {
 
   /**Base Tasks */
   val aaptGenerate = TaskKey[Seq[File]]("aapt-generate", "Generate R.java")
-  val aidlGenerate = TaskKey[Seq[File]]("aidl-generate",
-    "Generate Java classes from .aidl files.")
+  val aidlGenerate = TaskKey[Seq[File]]("aidl-generate", "Generate Java classes from .aidl files.")
 
   val proguardInJars = TaskKey[Seq[File]]("proguard-in-jars")
   val proguardExclude = TaskKey[Seq[File]]("proguard-exclude")
@@ -122,10 +118,8 @@ object AndroidKeys {
   val installDevice = TaskKey[Unit]("install-device")
   val uninstallDevice = TaskKey[Unit]("uninstall-device")
 
-  val aaptPackage = TaskKey[File]("aapt-package",
-    "Package resources and assets.")
-  val packageDebug = TaskKey[File]("package-debug",
-    "Package and sign with a debug key.")
+  val aaptPackage = TaskKey[File]("aapt-package", "Package resources and assets.")
+  val packageDebug = TaskKey[File]("package-debug", "Package and sign with a debug key.")
   val packageRelease = TaskKey[File]("package-release", "Package without signing.")
   val cleanApk = TaskKey[Unit]("clean-apk", "Remove apk package")
 
@@ -135,51 +129,35 @@ object AndroidKeys {
   val makeAssetPath = TaskKey[Unit]("make-assest-path")
 
   /**Launch Tasks */
-  val startDevice = TaskKey[Unit]("start-device",
-    "Start package on device after installation")
-  val startEmulator = TaskKey[Unit]("start-emulator",
-    "Start package on emulator after installation")
+  val startDevice = TaskKey[Unit]("start-device", "Start package on device after installation")
+  val startEmulator = TaskKey[Unit]("start-emulator", "Start package on emulator after installation")
 
   /**ddm Support tasks */
-  val stopBridge = TaskKey[Unit]("stop-bridge",
-    "Terminates the ADB debugging bridge")
-  val screenshotEmulator = TaskKey[File]("screenshot-emulator",
-    "Take a screenshot from the emulator")
-  val screenshotDevice = TaskKey[File]("screenshot-device",
-    "Take a screenshot from the device")
+  val stopBridge = TaskKey[Unit]("stop-bridge", "Terminates the ADB debugging bridge")
+  val screenshotEmulator = TaskKey[File]("screenshot-emulator", "Take a screenshot from the emulator")
+  val screenshotDevice = TaskKey[File]("screenshot-device", "Take a screenshot from the device")
 
   // hprof tasks are Unit because of async nature
-  val hprofEmulator = TaskKey[Unit]("hprof-emulator",
-    "Take a dump of the current heap from the emulator")
-  val hprofDevice = TaskKey[Unit]("hprof-device",
-    "Take a dump of the current heap from the device")
+  val hprofEmulator = TaskKey[Unit]("hprof-emulator", "Take a dump of the current heap from the emulator")
+  val hprofDevice = TaskKey[Unit]("hprof-device", "Take a dump of the current heap from the device")
 
-  val threadsEmulator = InputKey[Unit]("threads-emulator",
-    "Show thread dump from the emulator")
-  val threadsDevice = InputKey[Unit]("threads-device",
-    "Show thread dump from the device")
+  val threadsEmulator = InputKey[Unit]("threads-emulator", "Show thread dump from the emulator")
+  val threadsDevice = InputKey[Unit]("threads-device", "Show thread dump from the device")
 
   /**Market Publish tasks */
-  val prepareMarket = TaskKey[Unit]("prepare-market",
-    "Prepare asset for Market publication.")
+  val prepareMarket = TaskKey[Unit]("prepare-market", "Prepare asset for Market publication.")
   val zipAlign = TaskKey[File]("zip-align", "Run zipalign on signed jar.")
-  val signRelease = TaskKey[File]("sign-release",
-    "Sign with key alias using key-alias and keystore path.")
+  val signRelease = TaskKey[File]("sign-release", "Sign with key alias using key-alias and keystore path.")
   val cleanAligned = TaskKey[Unit]("clean-aligned", "Remove zipaligned jar")
 
 
   /**TypedResources Task */
-  val generateTypedResources = TaskKey[Seq[File]]("generate-typed-resources",
-    """Produce a file TR.scala that contains typed
-       references to layout resources.""")
+  val generateTypedResources = TaskKey[Seq[File]]("generate-typed-resources", "Produce a file TR.scala that contains typed references to layout resources.")
 
   /**Manifest Generator tasks*/
-  val generateManifest = TaskKey[File]("generate-manifest",
-    """Generates a customized AndroidManifest.xml with
-       current build number and debug settings.""")
+  val generateManifest = TaskKey[File]("generate-manifest", "Generates a customized AndroidManifest.xml with current build number and debug settings.")
 
-  val cleanManifest = TaskKey[Unit]("clean-manifest",
-    "Deletes the generated Android manifest")
+  val cleanManifest = TaskKey[Unit]("clean-manifest", "Deletes the generated Android manifest")
 
   /**Test Project Tasks */
   val testEmulator = TaskKey[Unit]("test-emulator", "runs tests in emulator")

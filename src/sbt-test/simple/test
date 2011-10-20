@@ -1,0 +1,31 @@
+> package-apk
+> package-apk(for debug)
+> package-apk(for market)
+
+
+> install
+# equivalent to
+> install on all
+# more specific
+> install on REGEX
+> install on (emulators|devices|REGEX|kv pair)
+
+> release
+# equivalent to
+> release(for market)
+
+# should run robolectric
+> test
+
+# should run instrumentation (if defined)
+# equivalent to androidInstrumentationSettingsIn(Config c) <- usually IntegrationTest
+> it:test
+
+# if c is compile then
+> test
+# is equivalent to running the instrumentation
+
+> android:jar
+> android:add-ons
+# etc.. all defauls
+

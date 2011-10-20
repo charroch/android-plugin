@@ -17,6 +17,6 @@ $ delete target/src_managed/main/java/org/scalatools/sbt/R.java
 
 # should package into an APK
 $ pause
-> check
+> package
 $ exists target/test.apk
 

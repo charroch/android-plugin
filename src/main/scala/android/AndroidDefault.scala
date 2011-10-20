@@ -46,10 +46,10 @@ object AndroidDefaults {
     managedJavaPath <<= (target in c)(_ / "src_managed" / "main" / "java"),
     makeManagedJavaPath in androidkey <<= AndroidHelpers.directory(managedJavaPath),
     classesMinJarPath <<= (target in c, classesMinJarName)(_ / _),
-    packageApkPath in androidkey <<= (target in c, packageApkName)(_ / _),
+    packageApkPath in androidkey <<= (target in c, packageApkName in androidkey)(_ / _),
     resourcesApkPath in androidkey <<= (target in c, resourcesApkName)(_ / _),
     classesDexPath in androidkey <<= (target in c, classesDexName)(_ / _),
     nativeLibrariesPath in androidkey <<= (sourceDirectory in c)(_ / "libs"),
-    packageApkName in androidkey := "test"
+    packageApkName in androidkey := "test.apk"
   )
 }
