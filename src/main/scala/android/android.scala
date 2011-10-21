@@ -1,7 +1,5 @@
 package android
 
-import _root_.android.AndroidHelpers._
-
 object AndroidPlugin extends sbt.Plugin {
 
   import sbt._
@@ -10,6 +8,15 @@ object AndroidPlugin extends sbt.Plugin {
   import AndroidKeys._
 
   lazy val librarySettings: Seq[Setting[_]] = androidSettingsIn(Compile)
+
+
+
+  def androidRobolectricSettingsIn(c:Configuration): Seq[Setting[_]] = inConfig(c)(Seq())
+
+  def androidInstrumentationSettingsIn(c: Configuration): Seq[Setting[_]] = inConfig(c)(Seq())
+
+  def androidSettingsIn(c: Configuration): Seq[Setting[_]] = inConfig(c)(Seq())
+
 
   def androidSettingsIn(c: Configuration): Seq[Setting[_]] =
     inConfig(c)(androidSettings0 ++ AndroidDefaults.commonAndroidSettingsIn(c) ++ Seq(
